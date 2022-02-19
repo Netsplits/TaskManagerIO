@@ -1,6 +1,6 @@
 ## TaskManagerIO scheduling and event based library for Arudino and mbed
 
-## Summary and what's supports:
+Dave Cherry / TheCodersCorner.com make this library available for you to use. It takes me significant effort to keep all my libraries current and working on a wide range of boards. Please consider making at least a one off donation via the sponsor button if you find it useful. In forks, please keep text to here intact.
 
 TaskManagerIO is an evolution of the task management class that was originally situated in IoAbstraction. It is backed by a simple queue that supports, immediate queuing, scheduled tasks, and events. It is safe to add tasks from another thread, and safe to trigger events from interrupts. However, your tasks are shielded from threads and interrupts making your code simpler.
 
@@ -28,12 +28,12 @@ In the setup method, add an function callback that gets fired once in the future
 
 ```
 	// Create a task scheduled once every 100 miliis
-	taskManager.scheduleOnce(100, [] {
+	taskid_t taskId = taskManager.scheduleOnce(100, [] {
 		// some work to be done.
 	});
 	
 	// Create a task that's scheduled every second
-	taskManager.scheduleFixedRate(1, [] {
+	taskid_t taskId = taskManager.scheduleFixedRate(1, [] {
 		// work to be done.
 	}, TIME_SECONDS);
 ```
@@ -79,9 +79,25 @@ Then in the loop method you need to call:
   }
 ```
 
-From 1.2.1 onwards reentrant locking has been added, if you have a shared resource that you need to lock around, you can do this in tasks. See the reentrantLocking example for more details.
+To schedule tasks that have an interval of longer than an hour, use the long schedule support as follows (more details in the longSchedule example):
 
-As of V1.1 - Arduino Only - If you want to use the legacy interrupt marshalling support instead of building an event you must additionally include the following:
+First create a long schedule either globally or using the new operator:
+
+    TmLongSchedule hourAndHalfSchedule(makeHourSchedule(1, 30), &myTaskExec);
+
+Then add it to task manager during setup or as needed:
+
+    taskManager.registerEvent(&hourAndHalfSchedule);
+    
+After this the callback (or event object) registered in the TmLongSchedule will be called whenever scheduled. 
+
+To enable or disable a task
+
+	taskManager.setTaskEnabled(taskId, enabled);
+
+If you have a shared resource that you need to lock around, you can do this in tasks. See the reentrantLocking example for more details.
+
+Arduino Only - If you want to use the legacy interrupt marshalling support instead of building an event you must additionally include the following:
 
 	#include <BasicInterruptAbstraction.h>
 
@@ -90,6 +106,9 @@ As of V1.1 - Arduino Only - If you want to use the legacy interrupt marshalling 
 
 * [TaskManagerIO documentation pages](https://www.thecoderscorner.com/products/arduino-libraries/taskmanager-io/)
 * [TaskManagerIO reference documentation](https://www.thecoderscorner.com/ref-docs/taskmanagerio/html)
+
+There is a forum where questions can be asked, but the rules of engagement are: **this is my hobby, I make it available because it helps others**. Don't expect immediate answers, make sure you've recreated the problem in a simple sketch that you can send to me. Please consider making at least a one time donation using the sponsor link above before using the forum.
+
 * [TCC Libraries community discussion forum](https://www.thecoderscorner.com/jforum/)
 * I also monitor the Arduino forum [https://forum.arduino.cc/], Arduino related questions can be asked there too.
 

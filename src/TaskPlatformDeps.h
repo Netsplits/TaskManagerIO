@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-present https://www.thecoderscorner.com (Nutricherry LTD).
+ * Copyright (c) 2018 https://www.thecoderscorner.com (Dave Cherry)..
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
@@ -345,9 +345,7 @@ namespace tm_internal {
 // going to run on these boards should be marked with this attribute.
 //
 #undef ISR_ATTR
-#if defined(ESP8266)
-# define ISR_ATTR ICACHE_RAM_ATTR
-#elif defined(ESP32)
+#if defined(ESP8266) || defined(ESP32)
 # define ISR_ATTR IRAM_ATTR
 #else
 # define ISR_ATTR

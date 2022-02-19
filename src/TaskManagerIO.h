@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-present https://www.thecoderscorner.com (Nutricherry LTD).
+ * Copyright (c) 2018 https://www.thecoderscorner.com (Dave Cherry)..
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
@@ -214,6 +214,15 @@ public:
      * @param task the task ID returned from the schedule call
      */
     void cancelTask(taskid_t task);
+
+    /**
+     * Sets a tasks enable status. An enabled task is scheduled whereas a disabled task is not scheduled. Note that
+     * after disabling a task it may run one more time before switching state. Upon re-enablement then task manager
+     * will put the item back into the run queue if needed.
+     * @param task the task to change status
+     * @param ena the enablement status
+     */
+    void setTaskEnabled(taskid_t task, bool ena);
 
     /**
      * Use instead of delays or wait loops inside code that needs to perform timing functions. It will

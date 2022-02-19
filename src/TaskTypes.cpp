@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-present https://www.thecoderscorner.com (Nutricherry LTD).
+ * Copyright (c) 2018 https://www.thecoderscorner.com (Dave Cherry)..
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
@@ -52,6 +52,7 @@ void TimerTask::handleScheduling(sched_t when, TimerUnit unit, bool repeating) {
     this->myTimingSchedule = when;
     this->timingInformation = repeating ? TimerUnit(unit | TM_TIME_REPEATING)  : unit;
     this->scheduledAt = (isMicrosSchedule()) ? micros() : millis();
+    taskEnabled = true;
 }
 
 void TimerTask::initialise(uint32_t when, TimerUnit unit, Executable* execCallback, bool deleteWhenDone, bool repeating) {
@@ -66,19 +67,6 @@ void TimerTask::initialiseEvent(BaseEvent* event, bool deleteWhenDone) {
     handleScheduling(0, TIME_MICROS, true);
     this->eventRef = event;
     this->executeMode = deleteWhenDone ? ExecutionType(EXECTYPE_EVENT | EXECTYPE_DELETE_ON_DONE) : EXECTYPE_EVENT;
-}
-
-bool TimerTask::isReady() {
-    if (!isInUse() || isRunning()) return false;
-
-    if ((isMicrosSchedule()) != 0) {
-        uint32_t delay = myTimingSchedule;
-        return (micros() - scheduledAt) >= delay;
-    }
-    else {
-        uint32_t delay = myTimingSchedule;
-        return (millis() - scheduledAt) >= delay;
-    }
 }
 
 unsigned long TimerTask::microsFromNow() {
@@ -99,6 +87,8 @@ unsigned long TimerTask::microsFromNow() {
 void TimerTask::execute() {
     RunningState runningState(this);
 
+    if(!isEnabled()) return;
+
     auto execType = (ExecutionType) (executeMode & EXECTYPE_MASK);
     switch (execType) {
         case EXECTYPE_EVENT:
@@ -113,7 +103,7 @@ void TimerTask::execute() {
             break;
     }
 
-    if (isRepeating()) {
+    if (isRepeating() && isEnabled()) {
         this->scheduledAt = isMicrosSchedule() ? micros() : millis();
     }
 }
@@ -145,6 +135,17 @@ void TimerTask::processEvent() {
     }
 
     scheduledAt = micros();
+}
+
+bool TimerTask::isRepeating() const {
+    if(ExecutionType(executeMode & EXECTYPE_MASK) == EXECTYPE_EVENT) {
+        // if it's an event it repeats until the event is considered "complete"
+        return !eventRef->isComplete();
+    }
+    else {
+        // otherwise it's based on the task repeating flag
+        return 0 != (timingInformation & TM_TIME_REPEATING);
+    }
 }
 
 void BaseEvent::markTriggeredAndNotify() {
